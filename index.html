@@ -537,7 +537,12 @@ async function submitForm() {
   btn.textContent = 'Enviando...';
 
   try {
-    const params = new URLSearchParams({ fecha, codigo, cantidad, solicitante, motivo });
+    const params = new URLSearchParams({
+      fecha,
+      codigo,       solicitante,   motivo,
+      articulo: codigo,            // compatibilidad versión anterior GAS
+      solicitadoPor: solicitante   // compatibilidad versión anterior GAS
+    });
     const res    = await fetch(`${GAS_URL}?${params}`);
     const json   = await res.json();
 
