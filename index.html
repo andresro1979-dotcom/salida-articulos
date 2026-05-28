@@ -404,7 +404,8 @@
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
 // ── Config ──────────────────────────────────────────────────
-let GAS_URL = localStorage.getItem('gas_url') || '';
+const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbwBgByMQF439377FfcNsHtqpJ31RQFXC0MVELIyW7Bj7ACA4YZ-q0mQzBgPbvn3ODnh/exec';
+let GAS_URL = localStorage.getItem('gas_url') || DEFAULT_GAS_URL;
 const NOMBRES_KEY = 'nombres_frecuentes';
 
 // ── Init ─────────────────────────────────────────────────────
