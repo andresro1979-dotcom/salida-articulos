@@ -538,10 +538,9 @@ async function submitForm() {
 
   try {
     const params = new URLSearchParams({
-      fecha,
-      codigo,       solicitante,   motivo,
-      articulo: codigo,            // compatibilidad versión anterior GAS
-      solicitadoPor: solicitante   // compatibilidad versión anterior GAS
+      fecha, codigo, cantidad, solicitante, motivo,
+      articulo: codigo,
+      solicitadoPor: solicitante
     });
     const res    = await fetch(`${GAS_URL}?${params}`);
     const json   = await res.json();
