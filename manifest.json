@@ -1,6 +1,6 @@
 {
-  "name": "Salida de Artículos",
-  "short_name": "Salida",
+  "name": "Inventario Caja Chica",
+  "short_name": "Inventario Caja Chica",
   "description": "Registro de salida de artículos via código QR",
   "start_url": "./index.html",
   "display": "standalone",
