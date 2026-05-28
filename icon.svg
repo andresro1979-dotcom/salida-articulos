@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E88E5"/>
+      <stop offset="100%" stop-color="#0A3880"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- Caja / package -->
+  <!-- Tapa -->
+  <rect x="106" y="148" width="300" height="76" rx="14" fill="white"/>
+  <!-- Cuerpo -->
+  <rect x="126" y="218" width="260" height="186" rx="14" fill="white" opacity="0.92"/>
+  <!-- Franja central tapa -->
+  <rect x="226" y="148" width="60" height="76" fill="#1565C0" opacity="0.25" rx="4"/>
+
+  <!-- Flecha salida (apuntando hacia abajo-afuera) -->
+  <line x1="256" y1="290" x2="256" y2="360" stroke="#1565C0" stroke-width="28" stroke-linecap="round"/>
+  <polyline points="214,330 256,375 298,330"
+            fill="none" stroke="#1565C0" stroke-width="28"
+            stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
