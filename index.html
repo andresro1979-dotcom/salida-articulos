@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Salida de Artículos</title>
+  <style>
+    :root {
+      --primary:       #1565C0;
+      --primary-dark:  #0D47A1;
+      --primary-light: #E3F2FD;
+      --success:       #2E7D32;
+      --error:         #C62828;
+      --warning:       #E65100;
+      --bg:            #ECEFF1;
+      --card:          #FFFFFF;
+      --text:          #212121;
+      --text-muted:    #757575;
+      --border:        #CFD8DC;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--primary);
+      color: #fff;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 2px 6px rgba(0,0,0,.25);
+    }
+    .header-title h1  { font-size: 1.1rem; font-weight: 700; }
+    .header-title p   { font-size: .75rem; opacity: .8; margin-top: 2px; }
+    #btn-settings {
+      background: rgba(255,255,255,.15);
+      border: none;
+      color: #fff;
+      font-size: 1.2rem;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Main layout ── */
+    main {
+      padding: 16px;
+      max-width: 480px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding-bottom: 32px;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 18px 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.1);
+    }
+    .card-label {
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: 14px;
+    }
+
+    /* ── Camera preview ── */
+    #camera-wrap {
+      border-radius: 10px;
+      overflow: hidden;
+      background: #000;
+      margin-bottom: 12px;
+      display: none;
+      max-height: 320px;
+    }
+    #camera-wrap.active { display: block; }
+    #camera-wrap > div  { width: 100% !important; }
+
+    /* ── Scanned badge ── */
+    .badge-scanned {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: #E8F5E9;
+      border: 1px solid #A5D6A7;
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: .85rem;
+      color: #1B5E20;
+      margin-bottom: 12px;
+      word-break: break-all;
+    }
+    .badge-scanned.visible { display: flex; }
+
+    /* ── Form fields ── */
+    .field       { margin-bottom: 14px; }
+    .field:last-child { margin-bottom: 0; }
+    label {
+      display: block;
+      font-size: .78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    input[type="text"],
+    input[type="date"],
+    input[type="number"] {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 9px;
+      font-size: .98rem;
+      color: var(--text);
+      background: #fff;
+      transition: border-color .18s;
+      -webkit-appearance: none;
+    }
+    input:focus { outline: none; border-color: var(--primary); }
+
+    /* ── Buttons ── */
+    .btn {
+      width: 100%;
+      padding: 13px;
+      border: none;
+      border-radius: 9px;
+      font-size: .95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .18s, transform .1s;
+    }
+    .btn:active   { transform: scale(.98); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    #btn-scan {
+      background: var(--primary-light);
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+    #btn-submit {
+      background: var(--primary);
+      color: #fff;
+      padding: 16px;
+      font-size: 1.05rem;
+      border-radius: 12px;
+      box-shadow: 0 3px 8px rgba(21,101,192,.35);
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(90px);
+      background: #37474F;
+      color: #fff;
+      padding: 12px 22px;
+      border-radius: 10px;
+      font-size: .88rem;
+      font-weight: 500;
+      transition: transform .28s ease;
+      z-index: 200;
+      max-width: 88vw;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,.25);
+    }
+    .toast.show            { transform: translateX(-50%) translateY(0); }
+    .toast.toast-success   { background: var(--success); }
+    .toast.toast-error     { background: var(--error); }
+
+    /* ── Setup overlay ── */
+    #setup-overlay {
+      position: fixed;
+      inset: 0;
+      background: #FFF8E1;
+      z-index: 300;
+      overflow-y: auto;
+      padding: 20px;
+      display: none;
+    }
+    #setup-overlay.visible { display: block; }
+
+    .setup-icon { font-size: 3rem; text-align: center; margin: 12px 0; }
+    .setup-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--warning);
+      text-align: center;
+      margin-bottom: 6px;
+    }
+    .setup-subtitle {
+      font-size: .85rem;
+      color: #555;
+      text-align: center;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .step {
+      background: #fff;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      border-left: 4px solid #FFB300;
+    }
+    .step h3 {
+      font-size: .82rem;
+      color: var(--warning);
+      font-weight: 700;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .step p, .step li {
+      font-size: .85rem;
+      color: #333;
+      line-height: 1.6;
+    }
+    .step ol { padding-left: 18px; }
+    .step a  { color: var(--primary); }
+    code {
+      background: #FFF3E0;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: .8rem;
+    }
+
+    #gas-url-input {
+      width: 100%;
+      padding: 11px 13px;
+      border: 1.5px solid #FFB300;
+      border-radius: 8px;
+      font-size: .88rem;
+      margin-top: 10px;
+    }
+    #btn-save-url {
+      width: 100%;
+      padding: 13px;
+      background: #F57F17;
+      color: #fff;
+      border: none;
+      border-radius: 9px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  Setup overlay (shown when GAS URL empty)  -->
+<!-- ══════════════════════════════════════════ -->
+<div id="setup-overlay">
+  <div class="setup-icon">⚙️</div>
+  <p class="setup-title">Configuración inicial</p>
+  <p class="setup-subtitle">
+    Antes de usar la app debes conectarla<br>con tu Google Sheet. Sigue los pasos:
+  </p>
+
+  <div class="step">
+    <h3>Paso 1 — Abrir Apps Script</h3>
+    <p>
+      Abre tu
+      <a href="https://docs.google.com/spreadsheets/d/1aGYlOOuspelZW0nQIJWJzGzSTl079HK_lCoMLJMc2Ng/edit?gid=551448446" target="_blank">
+        Google Sheet ↗
+      </a>
+      y ve a <strong>Extensiones → Apps Script</strong>
+    </p>
+  </div>
+
+  <div class="step">
+    <h3>Paso 2 — Pegar el código</h3>
+    <p>
+      Borra el contenido existente y pega el código del archivo
+      <code>apps-script.gs</code> que viene junto a esta app.
+      Guarda con <code>Ctrl+S</code>.
+    </p>
+  </div>
+
+  <div class="step">
+    <h3>Paso 3 — Desplegar como Web App</h3>
+    <ol>
+      <li>Clic en <strong>Implementar → Nueva implementación</strong></li>
+      <li>Tipo: <strong>Aplicación web</strong></li>
+      <li>Ejecutar como: <strong>Yo (mi cuenta)</strong></li>
+      <li>Quién tiene acceso: <strong>Cualquier persona</strong></li>
+      <li>Clic en <strong>Implementar</strong> y autoriza los permisos</li>
+      <li>Copia la <strong>URL del servicio web</strong> que aparece</li>
+    </ol>
+  </div>
+
+  <div class="step">
+    <h3>Paso 4 — Ingresar la URL</h3>
+    <input
+      type="url"
+      id="gas-url-input"
+      placeholder="https://script.google.com/macros/s/..."
+    >
+    <button id="btn-save-url" onclick="saveGasUrl()">Guardar y continuar →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════ -->
+<!--  Main app                  -->
+<!-- ══════════════════════════ -->
+<header>
+  <div class="header-title">
+    <h1>📦 Salida de Artículos</h1>
+    <p>Registro de entregas</p>
+  </div>
+  <button id="btn-settings" onclick="openSetup()" title="Reconfigurar URL">⚙</button>
+</header>
+
+<main>
+
+  <!-- Scanner card -->
+  <div class="card">
+    <div class="card-label">Artículo</div>
+
+    <button class="btn" id="btn-scan" onclick="toggleScanner()">
+      📷 &nbsp;Escanear código QR
+    </button>
+
+    <div id="camera-wrap">
+      <div id="camera-inner"></div>
+    </div>
+
+    <div class="badge-scanned" id="badge-scanned">
+      <span>✅</span>
+      <span id="scanned-text"></span>
+    </div>
+
+    <div class="field" style="margin-top:4px;">
+      <label for="articulo">Código del artículo</label>
+      <input
+        type="text"
+        id="articulo"
+        placeholder="Escanea el QR o escribe aquí"
+        autocomplete="off"
+      >
+    </div>
+  </div>
+
+  <!-- Form card -->
+  <div class="card">
+    <div class="card-label">Datos de salida</div>
+
+    <div class="field">
+      <label for="fecha">Fecha</label>
+      <input type="date" id="fecha">
+    </div>
+
+    <div class="field">
+      <label for="cantidad">Cantidad</label>
+      <input type="number" id="cantidad" min="1" step="1" placeholder="0" inputmode="numeric">
+    </div>
+
+    <div class="field">
+      <label for="solicitadoPor">Solicitado por</label>
+      <input
+        type="text"
+        id="solicitadoPor"
+        placeholder="Nombre de quien solicita"
+        list="nombres-list"
+        autocomplete="off"
+      >
+      <datalist id="nombres-list"></datalist>
+    </div>
+  </div>
+
+  <!-- Submit -->
+  <button class="btn" id="btn-submit" onclick="submitForm()">
+    Registrar salida
+  </button>
+
+</main>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- html5-qrcode library -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+// ── Config ──────────────────────────────────────────────────
+let GAS_URL = localStorage.getItem('gas_url') || '';
+const NOMBRES_KEY = 'nombres_frecuentes';
+
+// ── Init ─────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  if (!GAS_URL) {
+    document.getElementById('setup-overlay').classList.add('visible');
+  }
+
+  // Auto-fill today's date
+  document.getElementById('fecha').value = todayISO();
+
+  // Sync code display when typing manually
+  document.getElementById('articulo').addEventListener('input', e => {
+    e.target.value ? showBadge(e.target.value) : hideBadge();
+  });
+
+  // Populate names datalist
+  loadNombres();
+});
+
+// ── Setup ────────────────────────────────────────────────────
+function openSetup() {
+  const input = document.getElementById('gas-url-input');
+  input.value = GAS_URL;
+  document.getElementById('setup-overlay').classList.add('visible');
+}
+
+function saveGasUrl() {
+  const url = document.getElementById('gas-url-input').value.trim();
+  if (!url.startsWith('https://script.google.com')) {
+    alert('Por favor ingresa una URL válida de Google Apps Script');
+    return;
+  }
+  GAS_URL = url;
+  localStorage.setItem('gas_url', url);
+  document.getElementById('setup-overlay').classList.remove('visible');
+  toast('✅ Configuración guardada', 'toast-success');
+}
+
+// ── QR Scanner ───────────────────────────────────────────────
+let qrCode  = null;
+let scanning = false;
+
+async function toggleScanner() {
+  scanning ? await stopScanner() : await startScanner();
+}
+
+async function startScanner() {
+  const wrap  = document.getElementById('camera-wrap');
+  const inner = document.getElementById('camera-inner');
+  inner.innerHTML = '';
+  wrap.classList.add('active');
+
+  qrCode = new Html5Qrcode('camera-inner');
+
+  try {
+    await qrCode.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: { width: 230, height: 230 } },
+      decodedText => {
+        document.getElementById('articulo').value = decodedText;
+        showBadge(decodedText);
+        stopScanner();
+      },
+      () => {}
+    );
+    scanning = true;
+    document.getElementById('btn-scan').innerHTML = '⏹️ &nbsp;Detener cámara';
+  } catch (err) {
+    wrap.classList.remove('active');
+    toast('No se pudo acceder a la cámara', 'toast-error');
+  }
+}
+
+async function stopScanner() {
+  if (qrCode) {
+    try { if (qrCode.isScanning) await qrCode.stop(); } catch (_) {}
+    try { qrCode.clear(); } catch (_) {}
+    qrCode = null;
+  }
+  document.getElementById('camera-wrap').classList.remove('active');
+  document.getElementById('camera-inner').innerHTML = '';
+  scanning = false;
+  document.getElementById('btn-scan').innerHTML = '📷 &nbsp;Escanear código QR';
+}
+
+function showBadge(text) {
+  document.getElementById('scanned-text').textContent = text;
+  document.getElementById('badge-scanned').classList.add('visible');
+}
+function hideBadge() {
+  document.getElementById('badge-scanned').classList.remove('visible');
+}
+
+// ── Submit ───────────────────────────────────────────────────
+async function submitForm() {
+  const articulo     = document.getElementById('articulo').value.trim();
+  const fecha        = document.getElementById('fecha').value;
+  const cantidad     = document.getElementById('cantidad').value;
+  const solicitadoPor = document.getElementById('solicitadoPor').value.trim();
+
+  if (!articulo)     { toast('Ingresa o escanea el código del artículo', 'toast-error'); return; }
+  if (!fecha)        { toast('Selecciona la fecha', 'toast-error'); return; }
+  if (!cantidad || Number(cantidad) < 1) { toast('Ingresa una cantidad válida', 'toast-error'); return; }
+  if (!solicitadoPor){ toast('Ingresa quién solicita', 'toast-error'); return; }
+
+  if (!GAS_URL) { openSetup(); return; }
+
+  const btn = document.getElementById('btn-submit');
+  btn.disabled    = true;
+  btn.textContent = 'Enviando...';
+
+  try {
+    const params = new URLSearchParams({ fecha, articulo, cantidad, solicitadoPor });
+    const res    = await fetch(`${GAS_URL}?${params}`);
+    const json   = await res.json();
+
+    if (json.status === 'ok') {
+      toast('✅ Salida registrada correctamente', 'toast-success');
+      saveNombre(solicitadoPor);
+      resetForm();
+    } else {
+      toast('Error: ' + (json.message || 'Inténtalo de nuevo'), 'toast-error');
+    }
+  } catch (err) {
+    toast('Sin conexión o URL incorrecta', 'toast-error');
+  }
+
+  btn.disabled    = false;
+  btn.textContent = 'Registrar salida';
+}
+
+function resetForm() {
+  document.getElementById('articulo').value = '';
+  document.getElementById('cantidad').value  = '';
+  hideBadge();
+  // Keeps fecha and solicitadoPor for next entry
+}
+
+// ── Names cache ──────────────────────────────────────────────
+function loadNombres() {
+  const nombres = JSON.parse(localStorage.getItem(NOMBRES_KEY) || '[]');
+  const dl = document.getElementById('nombres-list');
+  dl.innerHTML = nombres.map(n => `<option value="${n}">`).join('');
+}
+
+function saveNombre(nombre) {
+  let nombres = JSON.parse(localStorage.getItem(NOMBRES_KEY) || '[]');
+  if (!nombres.includes(nombre)) {
+    nombres.unshift(nombre);
+    if (nombres.length > 20) nombres = nombres.slice(0, 20);
+    localStorage.setItem(NOMBRES_KEY, JSON.stringify(nombres));
+    loadNombres();
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function todayISO() {
+  return new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
+}
+
+let toastTimer;
+function toast(msg, cls = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className   = 'toast show ' + cls;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = 'toast'; }, 3200);
+}
+</script>
+</body>
+</html>
