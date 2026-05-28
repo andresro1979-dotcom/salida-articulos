@@ -353,10 +353,10 @@
     </div>
 
     <div class="field" style="margin-top:4px;">
-      <label for="articulo">Código del artículo</label>
+      <label for="codigo">Código del artículo <span style="color:var(--text-muted);font-weight:400;">(col. D)</span></label>
       <input
         type="text"
-        id="articulo"
+        id="codigo"
         placeholder="Escanea el QR o escribe aquí"
         autocomplete="off"
       >
@@ -368,25 +368,35 @@
     <div class="card-label">Datos de salida</div>
 
     <div class="field">
-      <label for="fecha">Fecha</label>
+      <label for="fecha">Fecha <span style="color:var(--text-muted);font-weight:400;">(col. B)</span></label>
       <input type="date" id="fecha">
     </div>
 
     <div class="field">
-      <label for="cantidad">Cantidad</label>
+      <label for="cantidad">Cantidad <span style="color:var(--text-muted);font-weight:400;">(col. F)</span></label>
       <input type="number" id="cantidad" min="1" step="1" placeholder="0" inputmode="numeric">
     </div>
 
     <div class="field">
-      <label for="solicitadoPor">Solicitado por</label>
+      <label for="solicitante">Solicitante <span style="color:var(--text-muted);font-weight:400;">(col. H)</span></label>
       <input
         type="text"
-        id="solicitadoPor"
+        id="solicitante"
         placeholder="Nombre de quien solicita"
         list="nombres-list"
         autocomplete="off"
       >
       <datalist id="nombres-list"></datalist>
+    </div>
+
+    <div class="field">
+      <label for="motivo">Motivo <span style="color:var(--text-muted);font-weight:400;">(col. I — opcional)</span></label>
+      <input
+        type="text"
+        id="motivo"
+        placeholder="Ej: desarme aviario, obra, etc."
+        autocomplete="off"
+      >
     </div>
   </div>
 
@@ -418,7 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('fecha').value = todayISO();
 
   // Sync code display when typing manually
-  document.getElementById('articulo').addEventListener('input', e => {
+  document.getElementById('codigo').addEventListener('input', e => {
     e.target.value ? showBadge(e.target.value) : hideBadge();
   });
 
@@ -466,7 +476,7 @@ async function startScanner() {
       { facingMode: 'environment' },
       { fps: 10, qrbox: { width: 230, height: 230 } },
       decodedText => {
-        document.getElementById('articulo').value = decodedText;
+        document.getElementById('codigo').value = decodedText;
         showBadge(decodedText);
         stopScanner();
       },
@@ -502,15 +512,16 @@ function hideBadge() {
 
 // ── Submit ───────────────────────────────────────────────────
 async function submitForm() {
-  const articulo     = document.getElementById('articulo').value.trim();
-  const fecha        = document.getElementById('fecha').value;
-  const cantidad     = document.getElementById('cantidad').value;
-  const solicitadoPor = document.getElementById('solicitadoPor').value.trim();
+  const codigo      = document.getElementById('codigo').value.trim();
+  const fecha       = document.getElementById('fecha').value;
+  const cantidad    = document.getElementById('cantidad').value;
+  const solicitante = document.getElementById('solicitante').value.trim();
+  const motivo      = document.getElementById('motivo').value.trim();
 
-  if (!articulo)     { toast('Ingresa o escanea el código del artículo', 'toast-error'); return; }
-  if (!fecha)        { toast('Selecciona la fecha', 'toast-error'); return; }
+  if (!codigo)    { toast('Ingresa o escanea el código del artículo', 'toast-error'); return; }
+  if (!fecha)     { toast('Selecciona la fecha', 'toast-error'); return; }
   if (!cantidad || Number(cantidad) < 1) { toast('Ingresa una cantidad válida', 'toast-error'); return; }
-  if (!solicitadoPor){ toast('Ingresa quién solicita', 'toast-error'); return; }
+  if (!solicitante){ toast('Ingresa quién solicita', 'toast-error'); return; }
 
   if (!GAS_URL) { openSetup(); return; }
 
@@ -519,13 +530,13 @@ async function submitForm() {
   btn.textContent = 'Enviando...';
 
   try {
-    const params = new URLSearchParams({ fecha, articulo, cantidad, solicitadoPor });
+    const params = new URLSearchParams({ fecha, codigo, cantidad, solicitante, motivo });
     const res    = await fetch(`${GAS_URL}?${params}`);
     const json   = await res.json();
 
     if (json.status === 'ok') {
       toast('✅ Salida registrada correctamente', 'toast-success');
-      saveNombre(solicitadoPor);
+      saveNombre(solicitante);
       resetForm();
     } else {
       toast('Error: ' + (json.message || 'Inténtalo de nuevo'), 'toast-error');
@@ -539,10 +550,11 @@ async function submitForm() {
 }
 
 function resetForm() {
-  document.getElementById('articulo').value = '';
-  document.getElementById('cantidad').value  = '';
+  document.getElementById('codigo').value   = '';
+  document.getElementById('cantidad').value = '';
+  document.getElementById('motivo').value   = '';
   hideBadge();
-  // Keeps fecha and solicitadoPor for next entry
+  // Keeps fecha and solicitante for next entry
 }
 
 // ── Names cache ──────────────────────────────────────────────
@@ -553,6 +565,7 @@ function loadNombres() {
 }
 
 function saveNombre(nombre) {
+  if (!nombre) return;
   let nombres = JSON.parse(localStorage.getItem(NOMBRES_KEY) || '[]');
   if (!nombres.includes(nombre)) {
     nombres.unshift(nombre);
