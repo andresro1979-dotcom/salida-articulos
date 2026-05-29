@@ -422,7 +422,8 @@
 <script>
 // ── Config ──────────────────────────────────────────────────
 const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbxRTTYGUz6yjq7QpnoTjsMWDgf9-Nwy5rw5ZLre3yZF0pONqRxrrbxKbOzzJnhruzQR/exec';
-let GAS_URL = localStorage.getItem('gas_url') || DEFAULT_GAS_URL;
+localStorage.setItem('gas_url', DEFAULT_GAS_URL);
+let GAS_URL = DEFAULT_GAS_URL;
 const NOMBRES_KEY = 'nombres_frecuentes';
 
 // ── Init ─────────────────────────────────────────────────────
