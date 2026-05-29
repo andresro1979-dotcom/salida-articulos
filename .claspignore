@@ -1,0 +1,7 @@
+index.html
+manifest.json
+icon.svg
+.clasp.json
+.claspignore
+**/*.md
+.git/**
