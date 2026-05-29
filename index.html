@@ -335,7 +335,7 @@
 <header>
   <div class="header-title">
     <h1>📦 Salida de Artículos</h1>
-    <p>Registro de entregas</p>
+    <p>Registro de entregas — Movimientos_Stock</p>
   </div>
   <button id="btn-settings" onclick="openSetup()" title="Reconfigurar URL">⚙</button>
 </header>
@@ -360,12 +360,23 @@
     </div>
 
     <div class="field" style="margin-top:4px;">
-      <label for="codigo">Código del artículo</label>
+      <label for="codigo">Código del artículo <span style="color:var(--text-muted);font-weight:400;">(ej: ART-001)</span></label>
       <input
         type="text"
         id="codigo"
         placeholder="Escanea el QR o escribe aquí"
         autocomplete="off"
+      >
+    </div>
+
+    <div class="field">
+      <label for="articulo">Artículo</label>
+      <input
+        type="text"
+        id="articulo"
+        placeholder="Se completa automáticamente"
+        readonly
+        style="background:#F5F5F5;color:#555;"
       >
     </div>
   </div>
@@ -438,6 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Sync code display when typing manually
   document.getElementById('codigo').addEventListener('input', e => {
     e.target.value ? showBadge(e.target.value) : hideBadge();
+    buscarArticulo(e.target.value.trim());
   });
 
   // Populate names datalist
@@ -486,6 +498,7 @@ async function startScanner() {
       decodedText => {
         document.getElementById('codigo').value = decodedText;
         showBadge(decodedText);
+        buscarArticulo(decodedText.trim());
         stopScanner();
       },
       () => {}
@@ -518,6 +531,18 @@ function hideBadge() {
   document.getElementById('badge-scanned').classList.remove('visible');
 }
 
+// ── Buscar artículo ───────────────────────────────────────────
+async function buscarArticulo(codigo) {
+  const campo = document.getElementById('articulo');
+  if (!codigo || codigo.length < 3) { campo.value = ''; return; }
+  campo.value = 'Buscando...';
+  try {
+    const res  = await fetch(`${GAS_URL}?action=consultar&codigo=${encodeURIComponent(codigo)}`);
+    const json = await res.json();
+    campo.value = json.success && json.nombre ? json.nombre : '';
+  } catch (_) { campo.value = ''; }
+}
+
 // ── Submit ───────────────────────────────────────────────────
 async function submitForm() {
   const codigo      = document.getElementById('codigo').value.trim();
@@ -547,7 +572,8 @@ async function submitForm() {
     const json   = await res.json();
 
     if (json.status === 'ok') {
-      toast('✅ Salida registrada correctamente', 'toast-success');
+      const saldoMsg = json.saldo !== undefined ? ` Stock actual: ${json.saldo}` : '';
+      toast('✅ Salida registrada.' + saldoMsg, 'toast-success');
       saveNombre(solicitante);
       resetForm();
     } else {
@@ -563,6 +589,7 @@ async function submitForm() {
 
 function resetForm() {
   document.getElementById('codigo').value   = '';
+  document.getElementById('articulo').value = '';
   document.getElementById('cantidad').value = '';
   document.getElementById('motivo').value   = '';
   hideBadge();
